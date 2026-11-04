@@ -1,0 +1,17 @@
+{"block_id": "b_0001", "page": 1, "section": "unknown", "text": "43"}
+{"block_id": "b_0002", "page": 1, "section": "unknown", "text": "ЛЕКЦИИ ПО ТФКП"}
+{"block_id": "b_0003", "page": 1, "section": "unknown", "text": "будет голоморфной в _D_ функцией."}
+{"block_id": "b_0004", "page": 1, "section": "unknown", "text": "Доказательство. Докажем вначале непрерывность _g_ ( _ζ, z_ ) как функции двух переменных в _D Ч D_ . В точках ( _ζ_ 0 _, z_ 0) при _ζ_ 0 _̸_ = _z_ 0 непрерывность очевидна, поскольку это является следствием непрерывности частного при не обращении в нуль знаменателя. Пусть теперь _z_ 0 _∈ D_ и рассмотрим поведение функции _g_ ( _ζ, z_ ) в окрестности точки ( _z_ 0 _, z_ 0) . Выберем _r >_ 0 меньше расстояния от _z_ 0 до границы _∂D_ области _D_ . Тогда в замкнутом круге _Or_ ( _z_ 0) функция _f_ будет представима абсолютно и равномерно сходящимся рядом Тейлора"}
+{"block_id": "b_0005", "page": 1, "section": "unknown", "text": "<!-- Start of picture text -->\nf ( z ) = c 0 +  c 1( z − z 0) +  c 2( z − z 0) 2 +  . . . .<br><!-- End of picture text -->"}
+{"block_id": "b_0006", "page": 1, "section": "unknown", "text": "Поэтому для _ζ, z ∈Or_ ( _z_ 0) имеем"}
+{"block_id": "b_0007", "page": 1, "section": "unknown", "text": "<!-- Start of picture text -->\n∞<br>f ( ζ )  − f ( z ) = c 1( ζ − z ) + � cn [( ζ − z 0) n − ( z − z 0) n ]<br>n =2<br>∞<br>= ( ζ − z ) f ′ ( z 0) + � cn [( ζ − z 0) n− 1 + ( ζ − z 0) n− 2 ( z − z 0) +  . . .  + ( z − z 0) n− 1 ]<br>� n =2 �<br><!-- End of picture text -->"}
+{"block_id": "b_0008", "page": 1, "section": "unknown", "text": "и далее"}
+{"block_id": "b_0009", "page": 1, "section": "unknown", "text": "<!-- Start of picture text -->\nf ( ζ )  − f ( z ) ∞<br>|g ( ζ, z )  − g ( z 0 , z 0) | = − f ′ ( z 0) � |cn|nr n− 1 .<br>���� ζ − z ���� ⩽ n =2<br><!-- End of picture text -->"}
+{"block_id": "b_0010", "page": 1, "section": "unknown", "text": "Замечая, что ряд в правой части последнего неравенства стремится к нулю при _r →_ 0 , приходим к непрерывности функции _g_ в точке ( _z_ 0 _, z_ 0) ."}
+{"block_id": "b_0011", "page": 1, "section": "unknown", "text": "Покажем теперь, что функция _h_ является голоморфной в области _D_ . Снова фиксируем _z_ 0 _∈ D_ и _r >_ 0 так, чтобы _Or_ ( _z_ 0) _⊂ D_ . Для любого треугольника ∆ , расположенного в _Or_ ( _z_ 0) вместе со своим замыканием имеем"}
+{"block_id": "b_0012", "page": 1, "section": "unknown", "text": "<!-- Start of picture text -->\n   <br>h ( z ) dz = g ( ζ, z ) dζ g ( ζ, z ) dz<br>� � � � �<br>∂ ∆ ∂ ∆  γ  dz = γ  ∂ ∆  dζ.<br><!-- End of picture text -->"}
+{"block_id": "b_0013", "page": 1, "section": "unknown", "text": "Замена порядка интегрирования обоснована непрерывностью функции _g_ . Заметим теперь, что _g_ ( _ζ, z_ ) _dz_ является полным дифференциалом в _Or_ ( _z_ 0) . Поэтому"}
+{"block_id": "b_0014", "page": 1, "section": "unknown", "text": "<!-- Start of picture text -->\ng ( ζ, z ) dz = 0<br>�<br>∂ ∆<br><!-- End of picture text -->"}
+{"block_id": "b_0015", "page": 1, "section": "unknown", "text": "для всех _ζ ∈ D_ . Но тогда и"}
+{"block_id": "b_0016", "page": 1, "section": "unknown", "text": "<!-- Start of picture text -->\nh ( z ) dz = 0 .<br>�<br>∂ ∆<br><!-- End of picture text -->"}
+{"block_id": "b_0017", "page": 1, "section": "unknown", "text": "Следовательно, по теореме Морера 5.4 функция _h_ голоморфна в _Or_ ( _z_ 0) , а поскольку _z_ 0 выбиралось произвольным в _D_ , то получаем голоморфность функции _h_ во всей области _D_ . □"}
