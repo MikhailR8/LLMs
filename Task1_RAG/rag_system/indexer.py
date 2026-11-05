@@ -46,7 +46,7 @@ class CorpusIndexer:
         self.bm25 = BM25Okapi(tokenized)
         print("BM25 index built")
 
-    def build_dense_index(self, batch_size: int = 32):
+    def build_dense_index(self, batch_size: int = 16):
         """Строит Dense индекс с использованием embedding модели"""
         if self.embedding_model is None:
             print(f"Loading embedding model: {self.embedding_model_name}")

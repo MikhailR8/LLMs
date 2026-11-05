@@ -2,6 +2,8 @@ import argparse
 import json
 import re
 
+# Runned in google colab, on T4 OCR requires 8 minutes for 40 pages, surya-2.5 0.7B used
+
 def parse_qa(md_path):
     with open(md_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -39,18 +41,7 @@ def parse_qa(md_path):
         })
     return questions, golds
 
-def fix_cp1251_mojibake(text: str) -> str:
-    out = []
-    for ch in text:
-        try: b = ch.encode("cp1252")
-        except UnicodeEncodeError: out.append(ch); continue
-        if len(b) != 1 or b[0] < 0x80: out.append(ch); continue
-        try: cand = b.decode("cp1251")
-        except UnicodeDecodeError: out.append(ch); continue
-        out.append(cand)
-    return "".join(out)
-
-def extract_corpus_marker(pdf_path):
+def extract_corpus_marker(pdf_path, pages):
     print("Обработка корпуса...")
     from marker.converters.pdf import PdfConverter
     from marker.models import create_model_dict
@@ -58,7 +49,7 @@ def extract_corpus_marker(pdf_path):
     from marker.output import text_from_rendered
 
     config = {
-        "page_range": "0-40",
+        "page_range": f"0-{pages}",
         "disable_image_extraction": True,
         "paginate_output": True
     }
@@ -72,40 +63,81 @@ def extract_corpus_marker(pdf_path):
     rendered = converter(pdf_path)
     print("End converting")
     full_text, _, images = text_from_rendered(rendered)
-    # Разбиваем на страницы и блоки
-    pages = re.split(r'\n\s*\{PAGE_BREAK\}\s*\n|\n\s*-{3,}\s*\n', full_text)
+
+    # --- НОВАЯ ЛОГИКА РАЗБИВКИ НА СТРАНИЦЫ ---
+    def split_into_pages(text):
+        # Ищем маркеры вида {3}-----
+        pattern = re.compile(r'\{(\d+)\}-+')
+        pages = []
+        last_end = 0
+        current_page_num = 1  # До первого маркера идет 1-я страница
+
+        for match in pattern.finditer(text):
+            # Текст до маркера принадлежит текущей странице
+            page_text = text[last_end:match.start()].strip()
+            if page_text:
+                pages.append((current_page_num, page_text))
+
+            # Обновляем номер страницы на тот, что в маркере
+            current_page_num = int(match.group(1)) + 1
+            last_end = match.end()
+
+        # Забираем текст после последнего маркера
+        last_text = text[last_end:].strip()
+        if last_text:
+            pages.append((current_page_num, last_text))
+
+        return pages
+
+    pages_data = split_into_pages(full_text)
+    print(f"Найдено страниц в тексте: {len(pages_data)}")
 
     corpus = []
     block_counter = 1
+    current_section = "unknown"
 
-    for page_idx, page_text in enumerate(pages):
-        page_num = page_idx + 1
-        page_text = page_text.strip()
-        if not page_text: continue
+    for page_num, page_text in pages_data:
 
-        current_section = "unknown"
+        # Разбиваем страницу на параграфы (блоки) по двойному переносу строки
         raw_blocks = re.split(r'\n\s*\n', page_text)
 
         for raw_block in raw_blocks:
             raw_block = raw_block.strip()
-            if not raw_block: continue
+            if not raw_block:
+                continue
 
-            text = fix_cp1251_mojibake(raw_block)
+            text = raw_block
 
+            # Фильтруем мусорные блоки (короткие или одиночные маркеры)
+            if len(text) < 5 or re.fullmatch(r'\d+', text) or text.startswith('{') and '---' in text:
+                continue
+
+            # Определяем заголовки (Markdown #, ##)
             heading_match = re.match(r'^(#+)\s+(.*)', text)
             if heading_match:
                 current_section = heading_match.group(2).strip()
-                text = text[heading_match.end():].strip()
-                if text:
-                    corpus.append({"block_id": f"b_{block_counter:04d}", "page": page_num, "section": current_section, "text": text})
+                # Если после заголовка в этом же блоке есть текст, сохраняем его
+                text_content = text[heading_match.end():].strip()
+                if text_content:
+                    corpus.append({
+                        "block_id": f"b_{block_counter:04d}",
+                        "page": page_num,
+                        "section": current_section,
+                        "text": text_content
+                    })
                     block_counter += 1
-            else:
-                if len(text) < 5: continue
-                corpus.append({"block_id": f"b_{block_counter:04d}", "page": page_num, "section": current_section, "text": text})
+            elif current_section != "unknown" and current_section != "Содержание":
+                corpus.append({
+                    "block_id": f"b_{block_counter:04d}",
+                    "page": page_num,
+                    "section": current_section,
+                    "text": text
+                })
                 block_counter += 1
 
-    print(f"Извлечено {len(corpus)} блоков.")
+    print(f"✅ Успешно извлечено {len(corpus)} блоков.")
     return corpus
+
 
 def map_gold_citations(golds, corpus):
     for gold in golds:
@@ -125,7 +157,7 @@ if __name__ == "__main__":
     questions, golds = parse_qa(args.qa_md)
 
     # 2. Парсим Корпус
-    corpus = extract_corpus_marker(args.pdf)
+    corpus = extract_corpus_marker(args.pdf, pages=40)
 
     # 3. Мапим цитаты
     golds = map_gold_citations(golds, corpus)

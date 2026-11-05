@@ -1,0 +1,30 @@
+{
+  "model_revision": "qwen3.5-4b",
+  "access": {
+    "base_url": "https://appraiser-pleading-batting.ngrok-free.dev",
+    "model": "Qwen/Qwen3.5-4B",
+    "api_key": "EMPTY"
+  },
+  "generation_params": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "max_tokens": 1024,
+    "thinking": false
+  },
+  "limits": {
+    "max_llm_calls_per_question": 4,
+    "max_total_input_tokens": 16384,
+    "max_total_output_tokens": 4096,
+    "max_request_context_tokens": 8192,
+    "timeout_seconds": 60
+  },
+  "retrieval": {
+    "embedding_model": "BAAI/bge-m3",
+    "reranker_model": "BAAI/bge-reranker-v2-m3",
+    "top_k_bm25": 20,
+    "top_k_dense": 20,
+    "top_k_rerank": 3,
+    "use_adjacent_blocks": true,
+    "adjacent_window": 1
+  }
+}

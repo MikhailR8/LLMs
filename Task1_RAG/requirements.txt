@@ -1,1 +1,5 @@
 marker-pdf==1.9.3
+rank_bm25
+sentence-transformers
+torch
+tiktoken
