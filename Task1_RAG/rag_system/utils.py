@@ -43,20 +43,19 @@ def count_tokens(text: str, model_name: str = "gpt-3.5-turbo") -> int:
 def get_adjacent_blocks(block_id: str,
                         block_id_to_idx: Dict[str, int],
                         corpus_blocks: List[Dict],
-                        window: int = 1) -> List[Dict]:
-    """
-    Получает соседние блоки для расширения контекста
-    window=1 вернет [prev, current, next]
-    """
+                        window: int = 1,
+                        min_length: int = 80) -> List[Dict]:
     if block_id not in block_id_to_idx:
         return []
 
     idx = block_id_to_idx[block_id]
     result = []
 
-    # Добавляем блоки в окне
     for i in range(max(0, idx - window), min(len(corpus_blocks), idx + window + 1)):
-        result.append(corpus_blocks[i])
+        block = corpus_blocks[i]
+        # Текущий блок добавляем всегда, соседей — только если достаточно длинные
+        if i == idx or len(block['text'].strip()) >= min_length:
+            result.append(block)
 
     return result
 

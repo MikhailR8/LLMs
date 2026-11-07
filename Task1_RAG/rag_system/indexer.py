@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Dict
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
-import torch
+import re
 
 
 class CorpusIndexer:
@@ -30,12 +30,39 @@ class CorpusIndexer:
         print(f"Loaded {len(self.corpus_blocks)} blocks")
 
     def _get_texts_for_indexing(self) -> List[str]:
-        """Подготавливает тексты для индексации"""
+        """Подготавливает тексты для индексации, отсеивая мусор"""
         texts = []
+        valid_blocks = []
+        min_text_length = 80  # Минимум символов для индексации
+
         for block in self.corpus_blocks:
-            # Можно добавить секцию для контекста
-            text = f"{block.get('section', '')} {block['text']}".strip()
-            texts.append(text)
+            text = block['text'].strip()
+
+            # Фильтр 1: слишком короткие блоки
+            if len(text) < min_text_length:
+                continue
+
+            # Фильтр 2: блоки, состоящие только из пунктуации/цифр
+            if len(re.sub(r'[\s\d\W_]', '', text)) < 15:
+                continue
+
+            # Фильтр 3: известные "хвосты"
+            trash_patterns = [
+                "и лемма доказана", "лемма доказана", "теорема доказана",
+                "и теорема доказана", "что и требовалось", "ч.т.д."
+            ]
+            if text.lower() in trash_patterns or text.lower().endswith("доказана."):
+                continue
+
+            section_text = f"{block.get('section', '')} {text}".strip()
+            texts.append(section_text)
+            valid_blocks.append(block)
+
+        # Перезаписываем corpus_blocks только валидными блоками
+        self.corpus_blocks = valid_blocks
+        self.block_id_to_idx = {b['block_id']: i for i, b in enumerate(self.corpus_blocks)}
+        print(f"Filtered out {len(self.corpus_blocks) - len(valid_blocks)} short blocks")
+
         return texts
 
     def build_bm25_index(self):

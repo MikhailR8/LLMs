@@ -24,8 +24,8 @@
     "reranker_device": "cuda",
     "top_k_bm25": 20,
     "top_k_dense": 20,
-    "top_k_rerank": 4,
-    "use_adjacent_blocks": true,
+    "top_k_rerank": 9,
+    "use_adjacent_blocks": false,
     "adjacent_window": 1
   }
 }
