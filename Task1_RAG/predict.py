@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Dict
 from rag_system.retriever import HybridRetriever
 from rag_system.reranker import Reranker
-from rag_system.utils import get_adjacent_blocks, format_context, count_tokens
+from rag_system.utils import get_adjacent_blocks, format_context, safe_json_parse
 import requests
 
 
@@ -49,9 +49,10 @@ class RAGPredictor:
         payload = {
             "model": self.access_config["model"],
             "messages": messages,
-            "temperature": self.gen_params.get("temperature", 0.1),
-            "top_p": self.gen_params.get("top_p", 0.9),
-            "max_tokens": self.gen_params.get("max_tokens", 1024),
+            "temperature": self.gen_params.get("temperature"),
+            "top_p": self.gen_params.get("top_p"),
+            "max_completion_tokens": self.gen_params.get("max_completion_tokens"),
+            "reasoning_effort": self.gen_params.get("reasoning_effort")
         }
 
         response = requests.post(
@@ -68,13 +69,11 @@ class RAGPredictor:
 
         # Извлекаем статистику токенов
         usage = result.get("usage", {})
-        input_tokens = usage.get("prompt_tokens", 0)
-        output_tokens = usage.get("completion_tokens", 0)
 
         return {
             "content": result["choices"][0]["message"]["content"],
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens
+            "input_tokens": usage.get("prompt_tokens", 0),
+            "output_tokens": usage.get("completion_tokens", 0)
         }
 
     def retrieve_context(self, query: str, question_id: str) -> List[Dict]:
@@ -98,7 +97,7 @@ class RAGPredictor:
             expanded_blocks = []
             seen_ids = set()
 
-            for block in candidate_blocks[:5]:  # Берем топ-5 для расширения
+            for block in candidate_blocks[:10]:  # Берем топ-5 для расширения
                 adjacent = get_adjacent_blocks(
                     block['block_id'],
                     self.retriever.block_id_to_idx,
@@ -130,38 +129,31 @@ class RAGPredictor:
         question_text = question["question"]
         options_text = "\n".join([f"- {opt['id']}. {opt['text']}" for opt in question["options"]])
 
-        system_prompt = """You are a precise mathematical QA assistant. You must answer ONLY based on the provided context.
+        system_prompt = \
+"""Ты - помощник по вопросам теории функций комплексного переменного. Отвечай на вопросы, опираясь ТОЛЬКО на предоставленные данные.
+Правила:
+1. Проанализируй предоставленные сведения из учебника
+2. Выбери ВСЕ правильные ответы (может быть несколько)
+3. Предоставь короткое обоснование выбранного ответа на русском (rationale), max 40 слов
+4. В citations необходимы номера релевантных блоков block_ids (max 4)
+5. Если сведений недостаточно, ЯВНО скажи об этом в обосновании и установи "answer_ids": [], "abstain": true
 
-Rules:
-1. Analyze the context carefully
-2. Select ALL correct options (can be multiple)
-3. Provide brief rationale (max 1200 chars)
-4. Cite relevant block_ids (max 4)
-5. If context is insufficient, set abstain=true
+Формат ответа (JSON):
+{"rationale": "*Короткое пояснение*", "citations": ["b_0042", "b_0107"], "answer_ids": ["A", "C"], "abstain": false}"""
 
-Output JSON format:
-{
-  "answer_ids": ["A", "C"],
-  "abstain": false,
-  "rationale": "Brief explanation",
-  "citations": ["b_0042", "b_0107"]
-}"""
-
-        user_prompt = f"""Context:
+        user_prompt = \
+f"""Вопрос: {question_text}
+Сведения из учебника: 
 {context}
-
-Question:
-{question_text}
-
-Options:
+Варианты ответа: 
 {options_text}
-
-Provide your answer in JSON format."""
+Ответ в JSON формате: """
 
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
+        print(user_prompt)
 
         start_time = time.time()
         result = self.call_llm(messages, question_id)
@@ -176,7 +168,7 @@ Provide your answer in JSON format."""
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
 
-            answer = json.loads(content)
+            answer = safe_json_parse(content)
 
             # Валидация
             if not isinstance(answer.get("answer_ids"), list):

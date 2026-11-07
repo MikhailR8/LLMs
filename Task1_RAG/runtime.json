@@ -1,15 +1,15 @@
 {
-  "model_revision": "qwen3.5-4b",
+  "model_revision": "qwen3.5:4b-ollama",
   "access": {
-    "base_url": "https://appraiser-pleading-batting.ngrok-free.dev",
-    "model": "Qwen/Qwen3.5-4B",
-    "api_key": "EMPTY"
+    "base_url": "http://localhost:11434/v1",
+    "model": "qwen3.5:4b",
+    "api_key": "ollama"
   },
   "generation_params": {
     "temperature": 0.1,
     "top_p": 0.9,
-    "max_tokens": 1024,
-    "thinking": false
+    "max_completion_tokens": 2048,
+    "reasoning_effort": "none"
   },
   "limits": {
     "max_llm_calls_per_question": 4,
@@ -21,9 +21,10 @@
   "retrieval": {
     "embedding_model": "BAAI/bge-m3",
     "reranker_model": "BAAI/bge-reranker-v2-m3",
+    "reranker_device": "cuda",
     "top_k_bm25": 20,
     "top_k_dense": 20,
-    "top_k_rerank": 3,
+    "top_k_rerank": 4,
     "use_adjacent_blocks": true,
     "adjacent_window": 1
   }

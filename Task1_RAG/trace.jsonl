@@ -1,0 +1,15 @@
+{"id": "q_001", "llm_calls": 1, "input_tokens": 759, "output_tokens": 107, "elapsed_ms": 5431, "retrieved_block_ids": ["b_0138", "b_0417", "b_0209", "b_0179"]}
+{"id": "q_002", "llm_calls": 1, "input_tokens": 1023, "output_tokens": 109, "elapsed_ms": 3606, "retrieved_block_ids": ["b_0345", "b_0152", "b_0484", "b_0406"]}
+{"id": "q_003", "llm_calls": 1, "input_tokens": 1044, "output_tokens": 99, "elapsed_ms": 3602, "retrieved_block_ids": ["b_0199", "b_0176", "b_0346", "b_0201"]}
+{"id": "q_004", "llm_calls": 1, "input_tokens": 914, "output_tokens": 139, "elapsed_ms": 3736, "retrieved_block_ids": ["b_0484", "b_0212", "b_0355", "b_0483"]}
+{"id": "q_005", "llm_calls": 1, "input_tokens": 963, "output_tokens": 109, "elapsed_ms": 3675, "retrieved_block_ids": ["b_0406", "b_0395", "b_0484", "b_0346"]}
+{"id": "q_006", "llm_calls": 1, "input_tokens": 731, "output_tokens": 102, "elapsed_ms": 3476, "retrieved_block_ids": ["b_0421", "b_0422", "b_0445", "b_0424"]}
+{"id": "q_007", "llm_calls": 1, "input_tokens": 582, "output_tokens": 120, "elapsed_ms": 3820, "retrieved_block_ids": ["b_0343", "b_0344", "b_0328", "b_0545"]}
+{"id": "q_008", "llm_calls": 1, "input_tokens": 925, "output_tokens": 85, "elapsed_ms": 3663, "retrieved_block_ids": ["b_0484", "b_0483", "b_0395", "b_0406"]}
+{"id": "q_009", "llm_calls": 1, "input_tokens": 979, "output_tokens": 110, "elapsed_ms": 4015, "retrieved_block_ids": ["b_0483", "b_0484", "b_0176", "b_0201"]}
+{"id": "q_010", "llm_calls": 1, "input_tokens": 629, "output_tokens": 119, "elapsed_ms": 3674, "retrieved_block_ids": ["b_0511", "b_0492", "b_0198", "b_0417"]}
+{"id": "q_011", "llm_calls": 1, "input_tokens": 583, "output_tokens": 119, "elapsed_ms": 3599, "retrieved_block_ids": ["b_0516", "b_0509", "b_0510", "b_0518"]}
+{"id": "q_012", "llm_calls": 1, "input_tokens": 643, "output_tokens": 145, "elapsed_ms": 3942, "retrieved_block_ids": ["b_0510", "b_0509", "b_0334", "b_0118"]}
+{"id": "q_013", "llm_calls": 1, "input_tokens": 673, "output_tokens": 86, "elapsed_ms": 3335, "retrieved_block_ids": ["b_0509", "b_0361", "b_0366", "b_0198"]}
+{"id": "q_014", "llm_calls": 1, "input_tokens": 591, "output_tokens": 83, "elapsed_ms": 3329, "retrieved_block_ids": ["b_0343", "b_0539", "b_0547", "b_0353"]}
+{"id": "q_015", "llm_calls": 1, "input_tokens": 998, "output_tokens": 104, "elapsed_ms": 3646, "retrieved_block_ids": ["b_0242", "b_0527", "b_0508", "b_0420"]}

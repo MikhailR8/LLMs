@@ -1,7 +1,31 @@
 # rag_system/utils.py
 from typing import List, Dict
 import tiktoken
+import re
+import json
 
+def safe_json_parse(content: str):
+    """
+    Безопасно парсит JSON от LLM, исправляя невалидные escape-последовательности
+    (часто возникают из-за LaTeX формул в тексте)
+    """
+    # Первая попытка — как есть
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError as e:
+        if "escape" not in str(e).lower():
+            raise
+
+        # Исправляем одинарные обратные слеши, не являющиеся валидными escape
+        # Валидные: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+        fixed = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', content)
+
+        try:
+            return json.loads(fixed)
+        except json.JSONDecodeError:
+            # Fallback: пробуем убрать все слеши (крайний случай)
+            fixed_no_slash = content.replace('\\', '')
+            return json.loads(fixed_no_slash)
 
 def count_tokens(text: str, model_name: str = "gpt-3.5-turbo") -> int:
     """
