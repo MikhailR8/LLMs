@@ -1,0 +1,417 @@
+1. Introduction
+
+Battlesnake is played by responding to simple webhooks sent to your
+server by the game engine. Developers build a web server that receives
+and responds to HTTP requests, and how your server responds to these
+requests controls how your Battlesnake behaves.
+
+
+    Requests​ <#requests>
+
+All requests made from the game engine to your Battlesnake server will
+have the following properties.
+
+
+      Content-Type​ <#content-type>
+
+Requests will contain JSON-encoded <https://www.json.org/> request
+bodies. Your server is responsible for receiving and parsing this data
+correctly (although most modern web frameworks come with easy ways to
+handle this type of request).
+
+
+    Responses​ <#responses>
+
+All responses from your Battlesnake server must abide by these rules
+when responding to game engine requests. If your server fails to send a
+valid response in any way, the game engine will consider it an error and
+act accordingly.
+
+
+      Content-Type​ <#content-type-1>
+
+Valid responses must be JSON-encoded strings with the Content-Type
+header set to `/application/json`/.
+
+
+      Status Codes​ <#status-codes>
+
+Valid responses must return an /HTTP 200 OK/ status code. If any other
+status code is returned, the game engine will consider it an invalid
+response.
+
+
+      Latency & Timeouts​ <#latency--timeouts>
+
+Your Battlesnake server must respond to requests made by the game engine
+within the given timeout value. This value is provided in the request
+body as a property on the game object <https://docs.battlesnake.com/api/
+objects/game>.
+
+In most games this will be 500ms, however, this value can technically
+vary from game to game. If your response does not reach the game engine
+within the specified timeout, the game engine will consider it an
+invalid response.
+
+tip
+
+Note that these time limits must include round-trip latency between the
+game engine and your server - be sure to take that into consideration
+when deciding how long to spend computing your response.
+
+
+    Response Error Handling​ <#response-error-handling>
+
+Any invalid responses will be treated as errors by the game engine, and
+your Battlesnake's next move will be chosen for you - even if that means
+certain elimination.
+
+*An error on the first move of a game* will move your Battlesnake |up|
+by default. This value is hardcoded into the game engine with no
+particular meaning behind it.
+
+*Errors on subsequent turns* will repeat your previous move. For
+example, if your Battlesnake successfully moves |right| on turn N, a
+timeout on turn N+1 will result in your Battlesnake moving |right|
+again. This applies even if the game engine chose your move for you on
+the previous turn due to an error.
+
+
+2. Webhooks
+
+This page documents the technical details of the webhooks sent from the
+game engine to your Battlesnake server. They all originate from the
+Battlesnake Server URL that you provide when creating your Battlesnake
+in the dashboard.
+
+
+    Battlesnake Details​ <#battlesnake-details>
+
+HTTP Request: |GET /|
+
+An empty GET request made to the root URL of your Battlesnake, used to
+load customization, check latency, and verifying successful
+communications between the game engine and your Battlesnake.
+
+
+        Request Data​ <#request-data>
+
+None, the game engine will send an empty request body.
+
+
+        Response Properties​ <#response-properties>
+
+*Property*	*Type*	*Description*
+*apiversion*	string /(required)/	Version of the Battlesnake API
+implemented by this Battlesnake. Currently only API version 1 is
+valid. /Example: "1"/
+*author*	string /(optional)/	Username of the author of this Battlesnake.
+If provided, this will be used to verify ownership. /Example:
+"BattlesnakeOfficial"/
+*color*	string /(optional)/	Hex color code used to display this
+Battlesnake. Must start with "#", followed by 6 hexadecimal
+characters. /Example: "#888888"/
+*head*	string /(optional)/	Head customization. /Example: "default"/
+*tail*	string /(optional)/	Tail customization. /Example: "default"/
+*version*	string /(optional)/	An optional version string for your
+Battlesnake. This value is not used in gameplay, but can be useful for
+tracking deployments on your end.
+
+See Customization Guide <https://docs.battlesnake.com/guides/
+customizations> for more info about changing your Battlesnake's color,
+head, and tail.
+
+
+        Example Response​ <#example-response>
+
+200 OK
+
+{
+  "apiversion": "1",
+  "author": "MyUsername",
+  "color": "#888888",
+  "head": "default",
+  "tail": "default",
+  "version": "0.0.1-beta"
+}
+
+
+
+    Game Started​ <#game-started>
+
+HTTP Request: |POST /start|
+
+Your Battlesnake will receive this request when it has been entered into
+a new game that is about to begin. Every game has a unique ID that can
+be used to allocated resources or data you may need. Your response to
+this request will be ignored.
+
+
+        Request Data​ <#request-data-1>
+
+*Parameter*	*Type*	*Description*
+*game*	object	Game Object <https://docs.battlesnake.com/api/objects/
+game> describing the game being played.
+*turn*	integer	Turn number (always 0 for new games).
+*board*	object	Board Object <https://docs.battlesnake.com/api/objects/
+board> describing the initial state of the game board.
+*you*	object	Battlesnake Object <https://docs.battlesnake.com/api/
+objects/battlesnake> describing your Battlesnake.
+
+
+        Response Properties​ <#response-properties-1>
+
+Responses to this request are ignored by the game engine.
+
+
+    Move​ <#move>
+
+HTTP Request: |POST /move|
+
+This request will be sent for every turn of every game that your
+Battlesnake plays. Use the information provided to determine how your
+Battlesnake will move on that turn, either up, down, left, or right.
+
+
+        Request Parameters​ <#request-parameters>
+
+*Parameter*	*Type*	*Description*
+*game*	object	Game Object <https://docs.battlesnake.com/api/objects/
+game> describing the game being played.
+*turn*	integer	Turn number for this move.
+*board*	object	Board Object <https://docs.battlesnake.com/api/objects/
+board> describing the initial state of the game board.
+*you*	object	Battlesnake Object <https://docs.battlesnake.com/api/
+objects/battlesnake> describing your Battlesnake.
+
+
+        Response Properties​ <#response-properties-2>
+
+*Property*	*Type*	*Description*
+*move*	string	Your Battlesnake's move for this turn. Valid moves are
+"up", "down", "left", or "right".
+*shout*	string /(optional)/	An optional message sent to all other
+Battlesnakes on the next turn. Must be 256 characters or less.
+
+
+        Example Response​ <#example-response-1>
+
+200 OK
+
+{
+  "move": "up",
+  "shout": "Moving up!"
+}
+
+    Game Over​ <#game-over>
+
+HTTP Request: `POST /end``
+
+Your Battlesnake will receive this request whenever a game it was
+playing has ended. Use it to learn how your Battlesnake won or lost and
+deallocate any server-side resources. Your response to this request will
+be ignored.
+
+
+        Request Data​ <#request-data-2>
+
+*Parameter*	*Type*	*Description*
+*game*	object	Game Object <https://docs.battlesnake.com/api/objects/
+game> describing the game being played.
+*turn*	integer	Final turn number.
+*board*	object	Board Object <https://docs.battlesnake.com/api/objects/
+board> describing the initial state of the game board.
+*you*	object	Battlesnake Object <https://docs.battlesnake.com/api/
+objects/battlesnake> describing your Battlesnake.
+
+
+        Response Properties​ <#response-properties-3>
+
+Responses to this request are ignored by the game engine.
+
+3. Objects
+
+3.1 Game
+{
+  "id": "totally-unique-game-id",
+  "ruleset": {
+    "name": "standard",
+    "version": "v1.2.3"
+  },
+  "map": "standard",
+  "timeout": 500,
+  "source": "league"
+}
+
+*Property*	*Type*	*Description*
+*id*	string	A unique identifier for this Game. /Example: "totally-
+unique-game-id"/
+*ruleset*	object	Information about the ruleset being used to run this
+game. /Example: {"name": "standard", "version": "v1.2.3"}/
+*map*	string	The name of the map being played on. /Example: "standard"/
+*timeout*	integer /(milliseconds)/	How much time your snake has to
+respond to requests for this Game. /Example: 500/
+*source*	string	The source of this game. One of:
+
+  * tournament
+  * league /(for League Arenas)/
+  * arena /(for all other Arenas)/
+  * challenge
+  * custom /(for all other games sources)/
+
+The values for this field may change in the near future.
+
+3.2 Ruleset
+
+"ruleset": {
+    "name": "standard",
+    "version": "v1.2.3",
+    "settings": { ... }
+  }
+
+*Property*	*Type*	*Description*
+*name*	string	Name of the ruleset being used to run this game. /Example:
+"standard"/
+*version*	string	The release version of the Rules <https://github.com/
+BattlesnakeOfficial/rules> module used in this game. /Example:
+"version": "v1.2.3"/
+*settings*	object	A collection of specific settings <https://
+docs.battlesnake.com/api/objects/ruleset-settings> being used by the
+current game that control how the rules are applied.
+
+3.3 RulesetSettings
+
+{
+  "foodSpawnChance": 25,
+  "minimumFood": 1,
+  "hazardDamagePerTurn": 14,
+  "royale": {
+    "shrinkEveryNTurns": 5
+  },
+  "squad": {
+    "allowBodyCollisions": true,
+    "sharedElimination": true,
+    "sharedHealth": true,
+    "sharedLength": true
+  }
+}
+
+info
+
+All ruleset settings will always be passed, but ruleset-specific
+settings (e.g. under |royale|, |squad|) will only take effect when the
+associated ruleset is in effect. For example, in a standard game, the
+value for *royale.shrinkEveryNTurns* isn't used in the game rules, but
+your Battlesnake server can still read it.
+
+*Property*	*Type*	*Description*
+*foodSpawnChance*	integer	Percentage chance of spawning a new food every
+round.
+*minimumFood*	integer	Minimum food to keep on the board every turn.
+*hazardDamagePerTurn*	integer	Health damage a snake will take when
+ending its turn in a hazard. This stacks on top of the regular 1 damage
+a snake takes per turn.
+/royale/.*shrinkEveryNTurns*	integer	In Royale mode, the number of turns
+between generating new hazards (shrinking the safe board space).
+/squad/.*allowBodyCollisions*	boolean	In Squad mode, allow members of
+the same squad to move over each other without dying.
+/squad/.*sharedElimination*	boolean	In Squad mode, all squad members are
+eliminated when one is eliminated.
+/squad/.*sharedHealth*	boolean	In Squad mode, all squad members share
+health.
+/squad/.*sharedLength*	boolean	In Squad mode, all squad members share
+length.
+
+3.4 Battlesnake
+
+{
+  "id": "totally-unique-snake-id",
+  "name": "Sneky McSnek Face",
+  "health": 54,
+  "body": [
+    {"x": 0, "y": 0},
+    {"x": 1, "y": 0},
+    {"x": 2, "y": 0}
+  ],
+  "latency": "123",
+  "head": {"x": 0, "y": 0},
+  "length": 3,
+  "shout": "why are we shouting??",
+  "squad": "1",
+  "customizations":{
+    "color":"#26CF04",
+    "head":"smile",
+    "tail":"bolt"
+  }
+}
+
+*Property*	*Type*	*Description*
+*id*	string	Unique identifier for this Battlesnake in the context of the
+current Game. /Example: "totally-unique-snake-id"/
+*name*	string	Name given to this Battlesnake by its author. /Example:
+"Sneky McSnek Face"/
+*health*	integer	Health value of this Battlesnake, between 0 and 100
+inclusively. /Example: 54/
+*body*	array	Array of coordinates representing this Battlesnake's
+location on the game board. This array is ordered from head to tail. /
+Example: [{"x": 0, "y": 0}, ..., {"x": 2, "y": 0}]/
+*latency*	string	The previous response time of this Battlesnake, in
+milliseconds. If the Battlesnake timed out and failed to respond, the
+game timeout will be returned (|game.timeout|) /Example: "500"/
+*head*	object	Coordinates for this Battlesnake's head. Equivalent to the
+first element of the body array. /Example: {"x": 0, "y": 0}/
+*length*	integer	Length of this Battlesnake from head to tail.
+Equivalent to the length of the body array. /Example: 3/
+*shout*	string	Message shouted by this Battlesnake on the previous
+turn. /Example: "why are we shouting??"/
+*squad*	string	The squad that the Battlesnake belongs to. Used to
+identify squad members in Squad Mode games. /Example: "1"/
+*customizations*	object	The collection of customizations that control
+how this Battlesnake is displayed. /Example: {"color":"#888888",
+"head":"default", "tail":"default" }/
+
+3.5 Board
+
+The game board is represented by a standard 2D grid, oriented with (0,0)
+in the bottom left. The Y-Axis is positive in the up direction, and X-
+Axis is positive to the right. Coordinates begin at zero, such that a
+board that is 11x11 will have coordinates ranging from [0, 10].
+
+Battlesnake Coordinate System
+
+{
+  "height": 11,
+  "width": 11,
+  "food": [
+    {"x": 5, "y": 5},
+    {"x": 9, "y": 0},
+    {"x": 2, "y": 6}
+  ],
+  "hazards": [
+    {"x": 0, "y": 0},
+    {"x": 0, "y": 1},
+    {"x": 0, "y": 2}
+  ],
+  "snakes": [
+    {"id": "snake-one", ... },
+    {"id": "snake-two", ... },
+    {"id": "snake-three", ... }
+  ]
+}
+
+*Property*	*Type*	*Description*
+*height*	integer	The number of rows in the y-axis of the game board. /
+Example: 11/
+*width*	integer	The number of columns in the x-axis of the game board. /
+Example: 11/
+*food*	array	Array of coordinates representing food locations on the
+game board. /Example: [{"x": 5, "y": 5}, ..., {"x": 2, "y": 6}]/
+*hazards*	array	Array of coordinates representing hazardous locations on
+the game board. /Example: [{"x": 0, "y": 0}, ..., {"x": 0, "y": 1}]/
+*snakes*	array	Array of Battlesnake Objects <https://
+docs.battlesnake.com/api/objects/battlesnake> representing all
+Battlesnakes remaining on the game board (including yourself if you
+haven't been eliminated). /Example: [{"id": "snake-one", ...}, ...]/
+
+
+
