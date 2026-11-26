@@ -1,5 +1,3 @@
-v6 (NEW, added tail-aware flood-fill) vs v2 (OLD)
-
 === NEW as hero (old as opp), duel, 80 games ===
 mode=duel games=80 hero=remote opp=remote v2Budget=25ms
   hero wins:      68 (85.0%)
