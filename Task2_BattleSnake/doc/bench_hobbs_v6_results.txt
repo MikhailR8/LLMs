@@ -1,0 +1,10 @@
+remote 127.0.0.1:8422 error: status -1
+mode=duel games=4 hero=v2 opp=remote v2Budget=100ms
+  hero wins:      3 (75.0%)
+  opp wins:       1 (25.0%)
+  draws:          0 (0.0%)
+  avg game turns: 398.8 (harness 736s)
+  hero compute:   avg 76.63ms, max 102.40ms, avg depth 7.3, max depth 16
+  hero loss causes: head-to-head=1
+PASSED
+EXIT=0

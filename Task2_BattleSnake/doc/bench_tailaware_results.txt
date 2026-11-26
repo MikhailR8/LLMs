@@ -1,0 +1,22 @@
+v6 (NEW, added tail-aware flood-fill) vs v2 (OLD)
+
+=== NEW as hero (old as opp), duel, 80 games ===
+mode=duel games=80 hero=remote opp=remote v2Budget=25ms
+  hero wins:      68 (85.0%)
+  opp wins:       12 (15.0%)
+  draws:          0 (0.0%)
+  avg game turns: 409.4 (harness 2448s)
+  hero compute:   avg 37.63ms, max 0.00ms, avg depth 0.0, max depth 0
+  hero loss causes: collision=1 head-to-head=3 not-eliminated=1 self-collision=6 starved=1
+REPORT ONLY (remote hero)
+
+=== OLD as hero (new as opp), duel, 80 games ===
+mode=duel games=80 hero=remote opp=remote v2Budget=25ms
+  hero wins:      15 (18.8%)
+  opp wins:       65 (81.2%)
+  draws:          0 (0.0%)
+  avg game turns: 389.9 (harness 2353s)
+  hero compute:   avg 37.54ms, max 0.00ms, avg depth 0.0, max depth 0
+  hero loss causes: collision=12 head-to-head=10 not-eliminated=1 out-of-bounds=11 self-collision=30 starved=1
+REPORT ONLY (remote hero)
+DONE

@@ -1,0 +1,10 @@
+mode=duel games=50 hero=v2 opp=snek2 v2Budget=25ms
+  hero wins:      49 (98.0%)
+  opp wins:       1 (2.0%)
+  draws:          0 (0.0%)
+  avg game turns: 223.3 (harness 284s)
+  hero compute:   avg 20.41ms, max 25.33ms, avg depth 5.4, max depth 16
+  hero loss causes: out-of-bounds=1
+  hero enclosed (no legal move, death was unavoidable): 1
+PASSED
+EXIT=0

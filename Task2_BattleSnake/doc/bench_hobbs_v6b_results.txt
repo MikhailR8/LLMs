@@ -1,0 +1,10 @@
+mode=duel games=4 hero=v2 opp=remote v2Budget=100ms
+  hero wins:      2 (50.0%)
+  opp wins:       2 (50.0%)
+  draws:          0 (0.0%)
+  avg game turns: 360.2 (harness 670s)
+  hero compute:   avg 78.05ms, max 102.74ms, avg depth 7.4, max depth 16
+  hero loss causes: head-to-head=1 self-collision=1
+  hero enclosed (no legal move, death was unavoidable): 1
+FAILED: hero win rate 50.0% below 70% threshold
+EXIT=1
