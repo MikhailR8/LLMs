@@ -1,4 +1,4 @@
-// Battlesnake C++ server - survival core v1.
+// Battlesnake C++ server - v2 search engine (v1 survival core as fallback).
 // Same dependency stack as bgaechter/battlesnake-starter-cpp:
 // cpp-httplib (yhirose) + nlohmann/json, both vendored in third_party/.
 //
@@ -6,6 +6,11 @@
 // The move decision is a pure function of the request state, so the server
 // is safe under concurrent games. Every failure path still answers with a
 // valid move: an invalid response makes the engine repeat the previous move.
+//
+// Env knobs:
+//   BATTLENSNAKE_BUDGET_MS  search time budget per move (default 350; the
+//                           engine allows 500ms, headroom covers scheduling)
+//   BATTLENSNAKE_STRATEGY   "v2" (default) or "v1"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -15,6 +20,7 @@
 #include "nlohmann/json.hpp"
 
 #include "rules.hpp"
+#include "search.hpp"
 #include "strategy.hpp"
 
 using json = nlohmann::json;
@@ -29,7 +35,7 @@ json infoJson() {
       {"color", "#5B8DB8"},
       {"head", "shades"},
       {"tail", "round-bum"},
-      {"version", "v1-survival-core"},
+      {"version", "v2-minimax"},
   };
 }
 
@@ -84,6 +90,14 @@ GameState stateFromJson(const json& j) {
 int main() {
   httplib::Server svr;
 
+  double budgetMs = 350.0;
+  if (const char* envBudget = std::getenv("BATTLENSNAKE_BUDGET_MS"))
+    budgetMs = std::atof(envBudget);
+  bool useV2 = true;
+  if (const char* envStrat = std::getenv("BATTLENSNAKE_STRATEGY"))
+    useV2 = std::string(envStrat) != "v1";
+  const double budget = budgetMs;  // captured for the handler below
+
   svr.Get("/", [](const httplib::Request&, httplib::Response& res) {
     res.set_content(infoJson().dump(), "application/json");
   });
@@ -93,7 +107,7 @@ int main() {
     res.set_content("{}", "application/json");
   });
 
-  svr.Post("/move", [](const httplib::Request& req, httplib::Response& res) {
+  svr.Post("/move", [budget, useV2](const httplib::Request& req, httplib::Response& res) {
     const auto t0 = std::chrono::steady_clock::now();
     std::string gameId = "?";
     int turn = -1;
@@ -103,13 +117,26 @@ int main() {
       turn = j.value("turn", -1);
       const GameState g = stateFromJson(j);
       const std::string youId = j.at("you").at("id").get<std::string>();
-      const Dir d = chooseMoveV1(g, youId);
 
-      json out = {{"move", bs::dirToString(d)}, {"shout", "v1 survival"}};
+      std::string shout = "v2 minimax";
+      Dir d;
+      int depth = 0;
+      if (useV2) {
+        const SearchResult r = searchV2(g, youId, budget);
+        d = r.bestMove;
+        depth = r.depthReached;
+        if (r.fellBackToV1) shout = "v1 fallback";
+        if (r.forcedWin) shout = "forced win";
+      } else {
+        d = chooseMoveV1(g, youId);
+        shout = "v1 survival";
+      }
+
+      json out = {{"move", bs::dirToString(d)}, {"shout", shout}};
       const auto t1 = std::chrono::steady_clock::now();
       const double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-      std::fprintf(stderr, "[move] game=%s turn=%d move=%s compute=%.3fms\n",
-                   gameId.c_str(), turn, bs::dirToString(d), ms);
+      std::fprintf(stderr, "[move] game=%s turn=%d move=%s depth=%d compute=%.3fms\n",
+                   gameId.c_str(), turn, bs::dirToString(d), depth, ms);
       res.set_content(out.dump(), "application/json");
     } catch (const std::exception& e) {
       std::fprintf(stderr, "[move] game=%s turn=%d ERROR: %s\n", gameId.c_str(), turn,
@@ -126,7 +153,8 @@ int main() {
   int port = 8080;
   if (const char* envPort = std::getenv("PORT")) port = std::atoi(envPort);
 
-  std::fprintf(stderr, "Battlesnake v1 survival core listening on 0.0.0.0:%d\n", port);
+  std::fprintf(stderr, "Battlesnake v2 (%s, budget %.0fms) listening on 0.0.0.0:%d\n",
+               useV2 ? "search" : "v1", budget, port);
   if (!svr.listen("0.0.0.0", port)) {
     std::fprintf(stderr, "failed to listen on port %d\n", port);
     return 1;
